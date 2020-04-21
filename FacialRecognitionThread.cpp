@@ -14,6 +14,8 @@
 #include <opencv2/objdetect.hpp>
 #include <QtGui/QImage>
 
+#include <chrono>
+
 
 FacialRecognitionThread::FacialRecognitionThread(QObject *parent) : QThread(parent)
 {
@@ -26,13 +28,13 @@ FacialRecognitionThread::FacialRecognitionThread(QObject *parent) : QThread(pare
 
     this->borderSize = 2;
 
-    this->scaleFactor = 1.5f;
+    this->scaleFactor = 1.1f;
 
     this->minNeighbours = 6;
 
-    this->minSize = cv::Size(30, 30);
+    this->minSize = cv::Size(10, 10);
 
-    this->maxSize = cv::Size (300, 300);
+    this->maxSize = cv::Size (500, 500);
 
     this->detectionFlag = cv::CASCADE_SCALE_IMAGE;
 
@@ -57,7 +59,9 @@ void FacialRecognitionThread::run() {
     // QThread::run();
 
     int apiID = cv::CAP_ANY;
-    cv::VideoCapture VideoStream(this->streamURL, apiID);
+    //cv::VideoCapture VideoStream(this->streamURL, apiID);
+    cv::VideoCapture VideoStream(0, apiID);
+    //cv::VideoCapture VideoStream("/media/psf/Home/Documents/Rose/P1200715.MOV", apiID);
     std::string backendName = VideoStream.getBackendName();
     double providedFPS = VideoStream.get(cv::CAP_PROP_FPS);
     double frameWidth = VideoStream.get(cv::CAP_PROP_FRAME_WIDTH);
@@ -106,19 +110,20 @@ void FacialRecognitionThread::run() {
     }
 
     cv::Mat ReferenceFrame;
+    cv::Mat RGBReferenceFrame;
     cv::Mat GrayFrame;
     std::vector<cv::Rect> Faces;
 
     std::cout << "VideoStream opened: " << VideoStream.isOpened() << std::endl;
     std::cout << "Was cancelled: " << this->wasCancelled << std::endl;
 
-    int frames = 0;
+    double frames = 0;
+    auto begin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     while (VideoStream.isOpened() && !this->wasCancelled)
     {
         frames = frames + 1;
         VideoStream >> ReferenceFrame;
-        std::cout << "Frames taken: " << frames << std::endl;
 
         cv::cvtColor(ReferenceFrame, GrayFrame, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(GrayFrame, GrayFrame);
@@ -126,18 +131,23 @@ void FacialRecognitionThread::run() {
         Detector.process(GrayFrame);
         Detector.getObjects(Faces);
 
-        std::cout << "Number of detected faces: " << Faces.size() << std::endl;
-
         for (auto & Face : Faces)
         {
             cv::rectangle(ReferenceFrame, Face, this->borderColor, this->borderSize);
         }
 
-        QImage imgIn= QImage((uchar*) ReferenceFrame.data, ReferenceFrame.cols, ReferenceFrame.rows, ReferenceFrame.step, QImage::Format_RGB888);
-        imgIn = imgIn.rgbSwapped();
+        // Color format from BGR to RGB
+        cv::cvtColor(ReferenceFrame, RGBReferenceFrame, cv::COLOR_BGR2RGB);
+        // Mirror Flipping
+        cv::flip(RGBReferenceFrame, RGBReferenceFrame, 1);
 
-        emit frameUpdated(imgIn);
+        QImage frame = QImage((uchar*) RGBReferenceFrame.data, RGBReferenceFrame.cols, RGBReferenceFrame.rows, RGBReferenceFrame.step, QImage::Format_RGB888);
+        emit frameUpdated(frame);
 
+        auto current = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        double averageFPS = frames / static_cast<double >(current - begin);
+
+        std::cout << "Average FPS: " << averageFPS << std::endl;
     }
 
     Detector.stop();

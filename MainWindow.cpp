@@ -20,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent){
 
 MainWindow::~MainWindow() {
     delete this->centralWidget;
+    if (this->facialRecognitionThread->isRunning()){
+        this->facialRecognitionThread->cancel();
+    }
     delete this->facialRecognitionThread;
 }
 

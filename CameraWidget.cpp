@@ -11,7 +11,6 @@ CameraWidget::CameraWidget(QWidget *parent) : QWidget(parent) {
 }
 
 void CameraWidget::updateFrame(const QImage &frame) {
-    std::cout << "Frame updated: " << frame.width() << " " << frame.height() << std::endl;
     this->image = frame.scaled(this->width(), this->height(), Qt::KeepAspectRatio);
     this->update();
 }
