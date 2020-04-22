@@ -19,32 +19,18 @@
 
 FacialRecognitionThread::FacialRecognitionThread(QObject *parent) : QThread(parent)
 {
-
-    std::cout << "Constructor of FacialRecognitionThread" << std::endl;
-
     this->streamURL = "";
-
     this->borderColor = cv::Scalar (0, 255, 0);
-
     this->borderSize = 2;
-
     this->scaleFactor = 1.1f;
-
     this->minNeighbours = 6;
-
     this->minSize = cv::Size(10, 10);
-
     this->maxSize = cv::Size (500, 500);
-
     this->detectionFlag = cv::CASCADE_SCALE_IMAGE;
-
     this->wasCancelled = false;
-
 }
 
 void FacialRecognitionThread::begin(const std::string &url) {
-    std::cout << "begin of FacialRecognitionThread" << std::endl;
-    std::cout << "URL: " << url << std::endl;
     this->streamURL = url;
     this->wasCancelled = false;
     this->start();
@@ -54,14 +40,10 @@ void FacialRecognitionThread::cancel() {
     this->wasCancelled = true;
 }
 
-void FacialRecognitionThread::run() {
-
-    // QThread::run();
-
+void FacialRecognitionThread::run()
+{
     int apiID = cv::CAP_ANY;
-    //cv::VideoCapture VideoStream(this->streamURL, apiID);
     cv::VideoCapture VideoStream(0, apiID);
-    //cv::VideoCapture VideoStream("/media/psf/Home/Documents/Rose/P1200715.MOV", apiID);
     std::string backendName = VideoStream.getBackendName();
     double providedFPS = VideoStream.get(cv::CAP_PROP_FPS);
     double frameWidth = VideoStream.get(cv::CAP_PROP_FRAME_WIDTH);
@@ -81,6 +63,7 @@ void FacialRecognitionThread::run() {
     std::string cascadeFrontalFilename = cv::samples::findFile("lbpcascades/lbpcascade_frontalface.xml");
     cv::Ptr<cv::CascadeClassifier> cascade = cv::makePtr<cv::CascadeClassifier>(cascadeFrontalFilename);
     cv::Ptr<cv::DetectionBasedTracker::IDetector> MainDetector = cv::makePtr<CascadeDetectorAdapter>(cascade, this->detectionFlag);
+
     if ( cascade->empty() )
     {
         std::cout << "Error: Can not load " << cascadeFrontalFilename.c_str() << std::endl;
@@ -113,9 +96,6 @@ void FacialRecognitionThread::run() {
     cv::Mat RGBReferenceFrame;
     cv::Mat GrayFrame;
     std::vector<cv::Rect> Faces;
-
-    std::cout << "VideoStream opened: " << VideoStream.isOpened() << std::endl;
-    std::cout << "Was cancelled: " << this->wasCancelled << std::endl;
 
     double frames = 0;
     auto begin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -152,6 +132,13 @@ void FacialRecognitionThread::run() {
 
     Detector.stop();
     VideoStream.release();
+    cascade.release();
+    MainDetector.release();
+    TrackingDetector.release();
+    ReferenceFrame.release();
+    RGBReferenceFrame.release();
+    GrayFrame.release();
+
     emit frameUpdated(QImage());
 }
 
@@ -161,9 +148,3 @@ FacialRecognitionThread::~FacialRecognitionThread() {
     }
 
 }
-
-
-
-
-
-
