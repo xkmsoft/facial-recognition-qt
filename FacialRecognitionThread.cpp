@@ -43,18 +43,27 @@ void FacialRecognitionThread::cancel() {
 void FacialRecognitionThread::run()
 {
     int apiID = cv::CAP_ANY;
-    cv::VideoCapture VideoStream(0, apiID);
-    std::string backendName = VideoStream.getBackendName();
-    double providedFPS = VideoStream.get(cv::CAP_PROP_FPS);
-    double frameWidth = VideoStream.get(cv::CAP_PROP_FRAME_WIDTH);
-    double frameHeight = VideoStream.get(cv::CAP_PROP_FRAME_HEIGHT);
+    cv::Ptr<cv::VideoCapture> VideoStream = nullptr;
+    bool cameraUsed = false;
+
+    if (this->streamURL == "0"){
+        VideoStream = cv::makePtr<cv::VideoCapture>(0, apiID);
+        cameraUsed = true;
+    } else {
+        VideoStream = cv::makePtr<cv::VideoCapture>(this->streamURL, apiID);
+    }
+
+    std::string backendName = VideoStream->getBackendName();
+    double providedFPS = VideoStream->get(cv::CAP_PROP_FPS);
+    double frameWidth = VideoStream->get(cv::CAP_PROP_FRAME_WIDTH);
+    double frameHeight = VideoStream->get(cv::CAP_PROP_FRAME_HEIGHT);
 
     std::cout << "Backend Name: " << backendName << std::endl;
     std::cout << "Provided FPS: " << providedFPS << std::endl;
     std::cout << "Frame Width: " << frameWidth << std::endl;
     std::cout << "Frame Height: " << frameHeight << std::endl;
 
-    if (!VideoStream.isOpened())
+    if (!VideoStream->isOpened())
     {
         std::cout << "Error: Cannot open video stream from camera" << std::endl;
         return;
@@ -100,10 +109,10 @@ void FacialRecognitionThread::run()
     double frames = 0;
     auto begin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    while (VideoStream.isOpened() && !this->wasCancelled)
+    while (VideoStream->isOpened() && !this->wasCancelled)
     {
         frames = frames + 1;
-        VideoStream >> ReferenceFrame;
+        *VideoStream >> ReferenceFrame;
 
         cv::cvtColor(ReferenceFrame, GrayFrame, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(GrayFrame, GrayFrame);
@@ -119,7 +128,9 @@ void FacialRecognitionThread::run()
         // Color format from BGR to RGB
         cv::cvtColor(ReferenceFrame, RGBReferenceFrame, cv::COLOR_BGR2RGB);
         // Mirror Flipping
-        cv::flip(RGBReferenceFrame, RGBReferenceFrame, 1);
+        if (cameraUsed){
+            cv::flip(RGBReferenceFrame, RGBReferenceFrame, 1);
+        }
 
         QImage frame = QImage((uchar*) RGBReferenceFrame.data, RGBReferenceFrame.cols, RGBReferenceFrame.rows, RGBReferenceFrame.step, QImage::Format_RGB888);
         emit frameUpdated(frame);
@@ -131,7 +142,7 @@ void FacialRecognitionThread::run()
     }
 
     Detector.stop();
-    VideoStream.release();
+    VideoStream->release();
     cascade.release();
     MainDetector.release();
     TrackingDetector.release();
