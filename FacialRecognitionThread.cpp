@@ -69,7 +69,7 @@ void FacialRecognitionThread::run()
         return;
     }
 
-    std::string cascadeFrontalFilename = cv::samples::findFile("lbpcascades/lbpcascade_frontalface.xml");
+    std::string cascadeFrontalFilename = cv::samples::findFile("haarcascades/haarcascade_frontalface_default.xml");
     cv::Ptr<cv::CascadeClassifier> cascade = cv::makePtr<cv::CascadeClassifier>(cascadeFrontalFilename);
     cv::Ptr<cv::DetectionBasedTracker::IDetector> MainDetector = cv::makePtr<CascadeDetectorAdapter>(cascade, this->detectionFlag);
 

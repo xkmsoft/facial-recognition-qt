@@ -15,7 +15,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
 
-add_executable(open_cv_hello_world main.cpp MainWindow.cpp MainWindow.h CameraWidget.cpp CameraWidget.h CentralWidget.cpp CentralWidget.h FacialRecognitionThread.cpp FacialRecognitionThread.h CascadeDetectorAdapter.cpp CascadeDetectorAdapter.h)
+add_executable(open_cv_hello_world main.cpp MainWindow.cpp MainWindow.h CameraWidget.cpp CameraWidget.h CentralWidget.cpp CentralWidget.h FacialRecognitionThread.cpp FacialRecognitionThread.h CascadeDetectorAdapter.cpp CascadeDetectorAdapter.h FacialRecognitionApplication.cpp FacialRecognitionApplication.h)
 
 target_link_libraries(open_cv_hello_world ${OpenCV_LIBS})
 target_link_libraries(open_cv_hello_world Qt5::Widgets)

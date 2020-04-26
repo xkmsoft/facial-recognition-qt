@@ -21,8 +21,8 @@ CentralWidget::CentralWidget(QWidget *parent) : QWidget(parent)  {
     this->entranceCameraLayout->addWidget(this->entranceCameraURL, 1, 0);
 
     this->entranceCameraWidget = new CameraWidget(this);
-    this->entranceCameraWidget->setFixedHeight(480);
-    this->entranceCameraWidget->setFixedWidth(640);
+    this->entranceCameraWidget->setFixedHeight(720);
+    this->entranceCameraWidget->setFixedWidth(1280);
     this->entranceCameraLayout->addWidget(this->entranceCameraWidget, 2, 0);
 
     this->entranceCameraStartButton = new QPushButton("Start Streaming", this);
