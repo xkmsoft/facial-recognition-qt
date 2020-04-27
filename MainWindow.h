@@ -7,6 +7,9 @@
 
 #include <QMainWindow>
 #include <QObject>
+#include <QAction>
+#include <QMenu>
+
 #include "FacialRecognitionThread.h"
 #include "CentralWidget.h"
 
@@ -24,10 +27,35 @@ public slots:
 
     void handleStream();
 
+private slots:
+
+    void quit();
+
+    void about();
+
+    void aboutQt();
+
 private:
+
+    void createMenus();
+
+    void createActions();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
+private:
+
     CentralWidget *centralWidget;
 
     FacialRecognitionThread *facialRecognitionThread;
+
+    QMenu *fileMenu;
+    QMenu *aboutMenu;
+
+    QAction *quitAction;
+    QAction *aboutAction;
+    QAction *aboutQtAction;
 
 };
 
