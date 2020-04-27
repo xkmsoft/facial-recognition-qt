@@ -108,6 +108,7 @@ void FacialRecognitionThread::run()
 
     double frames = 0;
     auto begin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto last = begin;
 
     while (VideoStream->isOpened() && !this->wasCancelled)
     {
@@ -138,7 +139,11 @@ void FacialRecognitionThread::run()
         auto current = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         double averageFPS = frames / static_cast<double >(current - begin);
 
-        std::cout << "Average FPS: " << averageFPS << std::endl;
+        if (current - last >= 1){
+            // Updating average FPS each second
+            emit averageFPSUpdated(averageFPS);
+            last = current;
+        }
     }
 
     Detector.stop();
@@ -157,5 +162,4 @@ FacialRecognitionThread::~FacialRecognitionThread() {
     if (this->isRunning()){
         this->cancel();
     }
-
 }

@@ -25,6 +25,8 @@ public slots:
 
     void updateFrame(const QImage &frame);
 
+    void updateAverageFPS(const double &fps);
+
     void handleStream();
 
 private slots:
@@ -40,6 +42,8 @@ private:
     void createMenus();
 
     void createActions();
+
+    void createStatusBar();
 
 protected:
     void closeEvent(QCloseEvent *event) override;

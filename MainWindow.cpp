@@ -13,8 +13,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent){
     this->setCentralWidget(this->centralWidget);
 
     this->facialRecognitionThread = new FacialRecognitionThread(this);
-    connect(this->facialRecognitionThread, SIGNAL(frameUpdated(const QImage &)), this, SLOT(updateFrame(const QImage &)));
-    connect(this->centralWidget->getEntranceCameraStartButton(), SIGNAL(clicked()), this, SLOT(handleStream()));
+    connect(this->facialRecognitionThread, &FacialRecognitionThread::frameUpdated, this, &MainWindow::updateFrame);
+    connect(this->facialRecognitionThread, &FacialRecognitionThread::averageFPSUpdated, this, &MainWindow::updateAverageFPS);
+    connect(this->centralWidget->getEntranceCameraStartButton(), &QAbstractButton::clicked, this, &MainWindow::handleStream);
 
     this->initUI();
     this->createActions();
@@ -23,8 +24,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent){
 
 void MainWindow::initUI() {
     this->setWindowTitle("Facial Recognition");
+    this->createStatusBar();
 }
 
+void MainWindow::createStatusBar() {
+    this->statusBar()->showMessage(tr("Ready"));
+}
 
 void MainWindow::createMenus() {
     this->fileMenu = this->menuBar()->addMenu(tr("&File"));
@@ -66,6 +71,11 @@ MainWindow::~MainWindow() {
 void MainWindow::updateFrame(const QImage &frame) {
     this->centralWidget->getEntranceCameraWidget()->updateFrame(frame);
 }
+
+void MainWindow::updateAverageFPS(const double &fps) {
+    this->statusBar()->showMessage(QString("Average FPS: %1").arg((int) fps));
+}
+
 
 void MainWindow::handleStream() {
     if (!this->facialRecognitionThread->isRunning())

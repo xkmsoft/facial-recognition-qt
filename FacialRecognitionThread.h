@@ -28,7 +28,7 @@ signals:
 
     void frameUpdated(const QImage &frame);
 
-    void averageFPSUpdated(double fps);
+    void averageFPSUpdated(const double &fps);
 
 protected:
     void run() override;
