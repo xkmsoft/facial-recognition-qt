@@ -15,6 +15,7 @@
 #include <QtGui/QImage>
 
 #include <chrono>
+#include <math.h>
 
 
 FacialRecognitionThread::FacialRecognitionThread(QObject *parent) : QThread(parent)
@@ -166,10 +167,15 @@ void FacialRecognitionThread::run()
         emit frameUpdated(frame);
 
         auto current = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        double averageFPS = validFrames / static_cast<double >(current - begin);
+
+        if (!isinf(averageFPS) && averageFPS > providedFPS){
+            std::cout << "Sleeping to decrease average FPS" << std::endl;
+            QThread::msleep(10);
+        }
 
         if (current - last >= 1){
             // Updating average FPS each second
-            double averageFPS = validFrames / static_cast<double >(current - begin);
             emit averageFPSUpdated(averageFPS);
             last = current;
         }
