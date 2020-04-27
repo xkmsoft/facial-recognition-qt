@@ -68,6 +68,10 @@ void FacialRecognitionThread::run()
         std::cout << "Error: Cannot open video stream from camera" << std::endl;
         return;
     }
+    else
+    {
+        std::cout << "VideoStream opened successfully" << std::endl;
+    }
 
     std::string cascadeFrontalFilename = cv::samples::findFile("haarcascades/haarcascade_frontalface_default.xml");
     cv::Ptr<cv::CascadeClassifier> cascade = cv::makePtr<cv::CascadeClassifier>(cascadeFrontalFilename);
@@ -106,14 +110,39 @@ void FacialRecognitionThread::run()
     cv::Mat GrayFrame;
     std::vector<cv::Rect> Faces;
 
-    double frames = 0;
+    double validFrames = 0;
     auto begin = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     auto last = begin;
 
+    int failedFrames = 0;
+    int failedFramesToBreak = 500;
+
     while (VideoStream->isOpened() && !this->wasCancelled)
     {
-        frames = frames + 1;
-        *VideoStream >> ReferenceFrame;
+        bool succeed = VideoStream->read(ReferenceFrame);
+
+        if (!(succeed) || ReferenceFrame.empty())
+        {
+            failedFrames++;
+            std::cout << "Next Frame could not be read from the Capture Device" << std::endl;
+            std::cout << "Number of failed frames: " << failedFrames << std::endl;
+            if (failedFrames >= failedFramesToBreak)
+            {
+                break;
+            }
+            else
+            {
+                // Sleep for 50 milliseconds
+                QThread::msleep(50);
+                continue;
+            }
+        }
+        else
+        {
+            // Resetting failed frames
+            failedFrames = 0;
+            validFrames = validFrames + 1;
+        }
 
         cv::cvtColor(ReferenceFrame, GrayFrame, cv::COLOR_BGR2GRAY);
         cv::equalizeHist(GrayFrame, GrayFrame);
@@ -137,10 +166,10 @@ void FacialRecognitionThread::run()
         emit frameUpdated(frame);
 
         auto current = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        double averageFPS = frames / static_cast<double >(current - begin);
 
         if (current - last >= 1){
             // Updating average FPS each second
+            double averageFPS = validFrames / static_cast<double >(current - begin);
             emit averageFPSUpdated(averageFPS);
             last = current;
         }

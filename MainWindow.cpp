@@ -108,7 +108,7 @@ void MainWindow::aboutQt() {
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (this->facialRecognitionThread->isRunning()){
         this->facialRecognitionThread->cancel();
-        this->facialRecognitionThread->wait();
+        this->facialRecognitionThread->wait(5000);
     }
     QWidget::closeEvent(event);
 }
