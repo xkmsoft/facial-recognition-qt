@@ -122,25 +122,18 @@ void FacialRecognitionThread::run()
     {
         bool succeed = VideoStream->read(ReferenceFrame);
 
-        if (!(succeed) || ReferenceFrame.empty())
-        {
+        if (!(succeed) || ReferenceFrame.empty()) {
             failedFrames++;
-            std::cout << "Next Frame could not be read from the Capture Device" << std::endl;
-            std::cout << "Number of failed frames: " << failedFrames << std::endl;
-            if (failedFrames >= failedFramesToBreak)
-            {
+            // Next Frame could not be read from the Capture Device
+            if (failedFrames >= failedFramesToBreak) {
                 break;
-            }
-            else
-            {
-                // Sleep for 50 milliseconds
+            } else {
+                // Sleep for 50 milliseconds, then continue to retry
                 QThread::msleep(50);
                 continue;
             }
-        }
-        else
-        {
-            // Resetting failed frames
+        } else {
+            // Resetting failed frames, increasing valid frames
             failedFrames = 0;
             validFrames = validFrames + 1;
         }
@@ -151,15 +144,15 @@ void FacialRecognitionThread::run()
         Detector.process(GrayFrame);
         Detector.getObjects(Faces);
 
-        for (auto & Face : Faces)
-        {
+        for (auto & Face : Faces) {
             cv::rectangle(ReferenceFrame, Face, this->borderColor, this->borderSize);
         }
 
         // Color format from BGR to RGB
         cv::cvtColor(ReferenceFrame, RGBReferenceFrame, cv::COLOR_BGR2RGB);
+
         // Mirror Flipping
-        if (cameraUsed){
+        if (cameraUsed) {
             cv::flip(RGBReferenceFrame, RGBReferenceFrame, 1);
         }
 
@@ -169,8 +162,8 @@ void FacialRecognitionThread::run()
         auto current = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         double averageFPS = validFrames / static_cast<double >(current - begin);
 
-        if (!isinf(averageFPS) && averageFPS > providedFPS){
-            std::cout << "Sleeping to decrease average FPS" << std::endl;
+        if (!isinf(averageFPS) && averageFPS > providedFPS + 1.0){
+            // Sleeping to decrease average FPS
             QThread::msleep(10);
         }
 
