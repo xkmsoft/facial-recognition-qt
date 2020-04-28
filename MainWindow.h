@@ -37,6 +37,8 @@ private slots:
 
     void aboutQt();
 
+    void openFile();
+
 private:
 
     void createMenus();
@@ -57,6 +59,7 @@ private:
     QMenu *fileMenu;
     QMenu *aboutMenu;
 
+    QAction *openFileAction;
     QAction *quitAction;
     QAction *aboutAction;
     QAction *aboutQtAction;

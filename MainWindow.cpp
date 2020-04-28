@@ -33,6 +33,7 @@ void MainWindow::createStatusBar() {
 
 void MainWindow::createMenus() {
     this->fileMenu = this->menuBar()->addMenu(tr("&File"));
+    this->fileMenu->addAction(this->openFileAction);
     this->fileMenu->addAction(this->quitAction);
 
     this->aboutMenu = this->menuBar()->addMenu(tr("&Help"));
@@ -41,6 +42,11 @@ void MainWindow::createMenus() {
 }
 
 void MainWindow::createActions() {
+
+    this->openFileAction = new QAction(tr("&Open File"), this);
+    this->openFileAction->setShortcuts(QKeySequence::Open);
+    this->openFileAction->setStatusTip(tr("Open an existing file"));
+    connect(this->openFileAction, &QAction::triggered, this, &MainWindow::openFile);
 
     this->quitAction = new QAction(tr("E&xit"), this);
     this->quitAction->setShortcuts(QKeySequence::Quit);
@@ -63,6 +69,7 @@ MainWindow::~MainWindow() {
     delete this->facialRecognitionThread;
     delete this->fileMenu;
     delete this->aboutMenu;
+    delete this->openFileAction;
     delete this->quitAction;
     delete this->aboutAction;
     delete this->aboutQtAction;
@@ -103,6 +110,25 @@ void MainWindow::quit() {
 
 void MainWindow::aboutQt() {
 
+}
+
+void MainWindow::openFile() {
+    QFileDialog dialog(this);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setViewMode(QFileDialog::Detail);
+    QStringList selectedFiles;
+    if (dialog.exec()){
+        selectedFiles = dialog.selectedFiles();
+        QString file = selectedFiles.first();
+        if (this->facialRecognitionThread->isRunning()){
+            // Facial recognition Thread already running, cancel the current process and wait till thread finishes.
+            this->facialRecognitionThread->cancel();
+            this->facialRecognitionThread->wait(5000);
+
+        }
+        this->centralWidget->getEntranceCameraUrl()->setText(file);
+        this->centralWidget->getEntranceCameraStartButton()->animateClick(100);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
